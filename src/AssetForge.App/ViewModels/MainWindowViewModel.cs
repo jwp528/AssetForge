@@ -37,6 +37,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _previewTitle = "Select an asset";
     [ObservableProperty] private string _previewDetails = "Images and audio appear here.";
     [ObservableProperty] private string _prompt = string.Empty;
+    [ObservableProperty] private string _assetName = string.Empty;
     [ObservableProperty] private double _durationSeconds = 2;
     [ObservableProperty] private int? _seed;
     [ObservableProperty] private AssetType _generationType = AssetType.SoundEffect;
@@ -51,7 +52,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     public bool HasImagePreview => PreviewImage is not null;
     public bool HasSelectedAudio => SelectedNode?.Asset?.IsAudio == true;
     public bool CanReplace => HasSelectedAudio && SelectedGeneratedAsset is not null && !IsBusy;
-    public bool CanGenerate => IsLocalAIConnected && SelectedModel is not null && !string.IsNullOrWhiteSpace(Prompt) && !IsBusy;
+    public bool CanGenerate => _project is not null && IsLocalAIConnected && SelectedModel is not null && !string.IsNullOrWhiteSpace(Prompt) && !string.IsNullOrWhiteSpace(AssetName) && !IsBusy;
+    public bool CanRename => _project is not null && SelectedGeneratedAsset is not null && !string.IsNullOrWhiteSpace(AssetName) && !IsBusy;
     public string ConnectionGlyph => IsLocalAIConnected ? "●" : "○";
 
     public MainWindowViewModel(IProjectFileService projects, IAudioPreviewService audio, ILocalAIClient localAI,
@@ -69,7 +71,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         var path = await _folderPicker.PickFolderAsync();
         if (path is null) return;
-        await RunAsync(async () => { _project = await _projects.OpenProjectAsync(path); ProjectName = _project.Name; RefreshTree(); StatusMessage = $"Loaded {_project.Assets.Count} supported assets."; });
+        await RunAsync(async () => { _project = await _projects.OpenProjectAsync(path); ProjectName = _project.Name; RefreshTree(); OnPropertyChanged(nameof(CanGenerate)); GenerateCommand.NotifyCanExecuteChanged(); StatusMessage = $"Loaded {_project.Assets.Count} supported assets."; });
     }
 
     [RelayCommand(CanExecute = nameof(CanGenerate))]
@@ -77,12 +79,29 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         await RunAsync(async () =>
         {
-            var generated = await _soundGenerator.GenerateAsync(new SoundGenerationRequest
+            var temporary = await _soundGenerator.GenerateAsync(new SoundGenerationRequest
             {
                 ModelId = SelectedModel!.Id, Prompt = Prompt.Trim(), DurationSeconds = DurationSeconds, Seed = Seed, OutputType = GenerationType
             }, _lifetime.Token);
+            var generated = await _projects.SaveGeneratedAssetAsync(_project!, temporary, AssetName, _lifetime.Token);
+            try { File.Delete(temporary.FilePath); } catch (IOException ex) { _logger.LogDebug(ex, "Could not remove temporary generated asset {Path}", temporary.FilePath); }
             GeneratedAssets.Insert(0, generated); SelectedGeneratedAsset = generated;
-            PreviewGenerated(generated); StatusMessage = $"Generated {generated.Name}.";
+            PreviewGenerated(generated); AssetName = Path.GetFileNameWithoutExtension(generated.FilePath); RefreshTree(); StatusMessage = $"Saved {Path.GetRelativePath(_project!.RootPath, generated.FilePath)}.";
+        });
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRename))]
+    private async Task RenameGeneratedAsync()
+    {
+        if (_project is null || SelectedGeneratedAsset is not { } selected) return;
+        await RunAsync(async () =>
+        {
+            var renamed = await _projects.RenameGeneratedAssetAsync(_project, selected, AssetName, _lifetime.Token);
+            var index = GeneratedAssets.IndexOf(selected);
+            if (index >= 0) GeneratedAssets[index] = renamed;
+            SelectedGeneratedAsset = renamed;
+            AssetName = Path.GetFileNameWithoutExtension(renamed.FilePath);
+            RefreshTree(); StatusMessage = $"Renamed asset to {renamed.Name}.";
         });
     }
 
@@ -129,10 +148,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     partial void OnAssetFilterChanged(string value) => RefreshTree();
     partial void OnPromptChanged(string value) { OnPropertyChanged(nameof(CanGenerate)); GenerateCommand.NotifyCanExecuteChanged(); }
+    partial void OnAssetNameChanged(string value) { OnPropertyChanged(nameof(CanGenerate)); OnPropertyChanged(nameof(CanRename)); GenerateCommand.NotifyCanExecuteChanged(); RenameGeneratedCommand.NotifyCanExecuteChanged(); }
     partial void OnSelectedModelChanged(LocalAIModel? value) { OnPropertyChanged(nameof(CanGenerate)); GenerateCommand.NotifyCanExecuteChanged(); }
-    partial void OnIsBusyChanged(bool value) { OnPropertyChanged(nameof(CanGenerate)); OnPropertyChanged(nameof(CanReplace)); GenerateCommand.NotifyCanExecuteChanged(); ReplaceOriginalCommand.NotifyCanExecuteChanged(); }
+    partial void OnIsBusyChanged(bool value) { OnPropertyChanged(nameof(CanGenerate)); OnPropertyChanged(nameof(CanReplace)); OnPropertyChanged(nameof(CanRename)); GenerateCommand.NotifyCanExecuteChanged(); ReplaceOriginalCommand.NotifyCanExecuteChanged(); RenameGeneratedCommand.NotifyCanExecuteChanged(); }
     partial void OnIsLocalAIConnectedChanged(bool value) { OnPropertyChanged(nameof(ConnectionGlyph)); OnPropertyChanged(nameof(CanGenerate)); GenerateCommand.NotifyCanExecuteChanged(); }
-    partial void OnSelectedGeneratedAssetChanged(GeneratedAsset? value) { if (value is not null) PreviewGenerated(value); OnPropertyChanged(nameof(CanReplace)); ReplaceOriginalCommand.NotifyCanExecuteChanged(); }
+    partial void OnSelectedGeneratedAssetChanged(GeneratedAsset? value) { if (value is not null) { PreviewGenerated(value); AssetName = Path.GetFileNameWithoutExtension(value.FilePath); } OnPropertyChanged(nameof(CanReplace)); OnPropertyChanged(nameof(CanRename)); ReplaceOriginalCommand.NotifyCanExecuteChanged(); RenameGeneratedCommand.NotifyCanExecuteChanged(); }
 
     private void PreviewGenerated(GeneratedAsset generated) { PreviewImage?.Dispose(); PreviewImage = null; PreviewTitle = generated.Name; PreviewDetails = $"Generated {generated.Type} · {generated.ModelId}"; OnPropertyChanged(nameof(HasImagePreview)); }
 

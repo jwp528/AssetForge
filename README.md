@@ -8,11 +8,12 @@ AssetForge is a local-first desktop tool for browsing, previewing, generating, a
 - Preview PNG, JPEG, and WebP images.
 - Play, pause, and stop supported audio through a replaceable Windows audio service.
 - Discover LocalAI models by capability without hardcoded model names.
-- Generate sound effects or music through `POST /v1/sound-generation`.
+- Name and generate sound effects or music through `POST /v1/sound-generation`; generated audio is saved directly under the selected project's `sounds` folder.
+- Rename generated results safely without overwriting existing files.
 - Preview generated audio and replace an existing audio asset after creating a timestamped backup.
 - Refresh automatically when project assets change outside AssetForge.
 
-TTS, image generation, multiple variants, Save As, generation history, recent-project persistence, installers, and non-Windows validation are planned for later milestones.
+TTS, image generation, multiple variants, generation history, recent-project persistence, installers, and non-Windows validation are planned for later milestones. When image generation is added, generated images will use the selected project's `img` folder.
 
 ## Requirements
 

@@ -7,6 +7,8 @@ public interface IProjectFileService : IDisposable
     event EventHandler? ProjectChanged;
     Task<ProjectModel> OpenProjectAsync(string path, CancellationToken cancellationToken = default);
     IReadOnlyList<AssetFile> GetAssets(ProjectModel project);
+    Task<GeneratedAsset> SaveGeneratedAssetAsync(ProjectModel project, GeneratedAsset generated, string assetName, CancellationToken cancellationToken = default);
+    Task<GeneratedAsset> RenameGeneratedAssetAsync(ProjectModel project, GeneratedAsset generated, string assetName, CancellationToken cancellationToken = default);
     Task<string> ReplaceFileAsync(ProjectModel project, AssetFile target, GeneratedAsset generated, CancellationToken cancellationToken = default);
 }
 

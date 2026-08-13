@@ -23,6 +23,29 @@ public sealed class ProjectFileService : IProjectFileService
 
     public IReadOnlyList<AssetFile> GetAssets(ProjectModel project) => Scan(project.RootPath);
 
+    public async Task<GeneratedAsset> SaveGeneratedAssetAsync(ProjectModel project, GeneratedAsset generated, string assetName, CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(generated.FilePath)) throw new FileNotFoundException("The generated asset no longer exists.", generated.FilePath);
+        var targetPath = GetGeneratedAssetPath(project, generated, assetName);
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        await CopyAsync(generated.FilePath, targetPath, cancellationToken);
+        return generated with { FilePath = targetPath };
+    }
+
+    public Task<GeneratedAsset> RenameGeneratedAssetAsync(ProjectModel project, GeneratedAsset generated, string assetName, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!File.Exists(generated.FilePath)) throw new FileNotFoundException("The generated asset no longer exists.", generated.FilePath);
+        var currentPath = Path.GetFullPath(generated.FilePath);
+        var relative = Path.GetRelativePath(project.RootPath, currentPath);
+        if (relative.StartsWith("..", StringComparison.Ordinal))
+            throw new InvalidOperationException("Only generated assets saved in the selected project can be renamed.");
+        var targetPath = GetGeneratedAssetPath(project, generated, assetName);
+        if (string.Equals(currentPath, targetPath, StringComparison.OrdinalIgnoreCase)) return Task.FromResult(generated);
+        File.Move(currentPath, targetPath, false);
+        return Task.FromResult(generated with { FilePath = targetPath });
+    }
+
     public async Task<string> ReplaceFileAsync(ProjectModel project, AssetFile target, GeneratedAsset generated, CancellationToken cancellationToken = default)
     {
         if (!AssetClassifier.IsSameGeneralType(target.Type, generated.Type))
@@ -60,6 +83,25 @@ public sealed class ProjectFileService : IProjectFileService
         await using var output = new FileStream(destination, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, true);
         await input.CopyToAsync(output, cancellationToken);
         await output.FlushAsync(cancellationToken);
+    }
+
+    private static string GetGeneratedAssetPath(ProjectModel project, GeneratedAsset generated, string assetName)
+    {
+        var name = assetName.Trim();
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Enter an asset name.", nameof(assetName));
+        if (name is "." or ".." || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || name.Contains(Path.DirectorySeparatorChar) || name.Contains(Path.AltDirectorySeparatorChar))
+            throw new ArgumentException("Use a filename without folder separators or invalid characters.", nameof(assetName));
+
+        var generatedExtension = Path.GetExtension(generated.FilePath);
+        var suppliedExtension = Path.GetExtension(name);
+        if (string.IsNullOrEmpty(suppliedExtension)) name += generatedExtension;
+        else if (!string.Equals(suppliedExtension, generatedExtension, StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException($"The generated asset must keep its {generatedExtension} extension.", nameof(assetName));
+
+        var folder = generated.Type == AssetType.Image ? "img" : AssetClassifier.IsAudio(generated.Type) ? "sounds" : throw new InvalidOperationException("Unsupported generated asset type.");
+        var path = Path.GetFullPath(Path.Combine(project.RootPath, folder, name));
+        if (File.Exists(path)) throw new IOException($"An asset named '{name}' already exists in the {folder} folder.");
+        return path;
     }
 
     private static IReadOnlyList<AssetFile> Scan(string root)

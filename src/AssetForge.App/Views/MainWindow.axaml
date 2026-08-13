@@ -73,6 +73,9 @@
             <ComboBox ItemsSource="{Binding GenerationTypes}" SelectedItem="{Binding GenerationType}" />
             <TextBlock Text="Prompt" Margin="0,8,0,0" />
             <TextBox Text="{Binding Prompt}" AcceptsReturn="True" MinHeight="96" PlaceholderText="Describe the sound you want…" TextWrapping="Wrap" />
+            <TextBlock Text="Asset name" Margin="0,8,0,0" />
+            <TextBox Text="{Binding AssetName}" PlaceholderText="coffee-shop-ambience" />
+            <TextBlock Text="Saved to the selected project's sounds folder." Foreground="#747887" FontSize="11" />
             <TextBlock Text="Model" Margin="0,8,0,0" />
             <ComboBox ItemsSource="{Binding SoundModels}" SelectedItem="{Binding SelectedModel}" DisplayMemberBinding="{Binding Id}" PlaceholderText="No compatible model" />
             <Grid ColumnDefinitions="*,12,*" Margin="0,8,0,0">
@@ -91,6 +94,7 @@
         <TextBlock Classes="section" Text="GENERATED RESULTS" />
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
           <Button Content="Preview" Command="{Binding PlayCommand}" />
+          <Button Content="Rename" Command="{Binding RenameGeneratedCommand}" />
           <Button Classes="primary" Content="Replace original" Command="{Binding ReplaceOriginalCommand}" />
         </StackPanel>
         <ListBox Grid.Row="1" Grid.ColumnSpan="2" ItemsSource="{Binding GeneratedAssets}" SelectedItem="{Binding SelectedGeneratedAsset}" Background="Transparent" Margin="0,10,0,0">
