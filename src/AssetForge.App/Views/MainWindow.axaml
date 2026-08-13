@@ -2,13 +2,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:AssetForge.App.ViewModels"
         x:Class="AssetForge.App.Views.MainWindow"
-        Title="AssetForge" Width="1280" Height="800" MinWidth="980" MinHeight="640"
+        Title="AssetForge" Icon="/Assets/Icons/app-icon-64.png" Width="1280" Height="800" MinWidth="980" MinHeight="640"
         Background="#111218">
   <Grid RowDefinitions="64,*,180,32">
     <Border Grid.Row="0" Background="#171920" BorderBrush="#2A2D37" BorderThickness="0,0,0,1" Padding="20,0">
       <Grid ColumnDefinitions="Auto,24,*,Auto" VerticalAlignment="Center">
         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-          <Border Width="30" Height="30" CornerRadius="7" Background="#6C5CE7"><TextBlock Text="A" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="16" /></Border>
+          <Image Width="34" Height="34" Source="/Assets/Icons/app-icon-64.png" Stretch="Uniform" />
           <TextBlock Text="AssetForge" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center" />
         </StackPanel>
         <TextBlock Grid.Column="2" Text="{Binding ProjectName, StringFormat='Project: {0}'}" Foreground="#B8BBC6" VerticalAlignment="Center" />

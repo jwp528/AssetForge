@@ -1,3 +1,5 @@
+![AssetForge](src/AssetForge.App/Assets/Brand/assetforge-logo.png)
+
 # AssetForge
 
 AssetForge is a local-first desktop tool for browsing, previewing, generating, and safely replacing assets in software and game projects. It uses .NET 10, Avalonia UI, MVVM, and a locally running [LocalAI](https://localai.io/) instance.
