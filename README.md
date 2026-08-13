@@ -26,7 +26,7 @@ AssetForge does not require LocalAI to launch. Generation controls remain unavai
 ## Run
 
 ```powershell
-dotnet restore AssetForge.sln --configfile NuGet.Config
+dotnet restore AssetForge.slnx --configfile NuGet.Config
 dotnet run --project src/AssetForge.App/AssetForge.App.csproj
 ```
 
@@ -40,7 +40,7 @@ dotnet run --project src/AssetForge.App/AssetForge.App.csproj
 ## Test
 
 ```powershell
-dotnet test AssetForge.sln -c Release
+dotnet test AssetForge.slnx -c Release
 ```
 
 ## Supported assets

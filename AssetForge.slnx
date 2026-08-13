@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AssetForge.App/AssetForge.App.csproj" />
+    <Project Path="src/AssetForge.Core/AssetForge.Core.csproj" />
+    <Project Path="src/AssetForge.Infrastructure/AssetForge.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AssetForge.Tests/AssetForge.Tests.csproj" />
+  </Folder>
+</Solution>
