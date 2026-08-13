@@ -7,9 +7,20 @@ public interface IProjectFileService : IDisposable
     event EventHandler? ProjectChanged;
     Task<ProjectModel> OpenProjectAsync(string path, CancellationToken cancellationToken = default);
     IReadOnlyList<AssetFile> GetAssets(ProjectModel project);
-    Task<GeneratedAsset> SaveGeneratedAssetAsync(ProjectModel project, GeneratedAsset generated, string assetName, CancellationToken cancellationToken = default);
-    Task<GeneratedAsset> RenameGeneratedAssetAsync(ProjectModel project, GeneratedAsset generated, string assetName, CancellationToken cancellationToken = default);
-    Task<string> ReplaceFileAsync(ProjectModel project, AssetFile target, GeneratedAsset generated, CancellationToken cancellationToken = default);
+}
+
+public interface IAssetWorkspaceService
+{
+    Task<WorkspaceLoadResult> OpenAsync(ProjectModel project, AssetFile? asset = null, CancellationToken cancellationToken = default);
+    Task<WorkspaceLoadResult> OpenWorkspaceAsync(ProjectModel project, string workspaceId, CancellationToken cancellationToken = default);
+    Task<AssetWorkspace> CreateNewAsync(ProjectModel project, string assetName, AssetType assetType, CancellationToken cancellationToken = default);
+    Task<AssetRevision> AddRevisionAsync(ProjectModel project, AssetWorkspace workspace, GeneratedAsset generated, SoundGenerationRequest request, bool isRetry, CancellationToken cancellationToken = default);
+    Task ApplyAsync(ProjectModel project, AssetWorkspace workspace, AssetRevision revision, CancellationToken cancellationToken = default);
+    Task RenameAsync(ProjectModel project, AssetWorkspace workspace, string newName, CancellationToken cancellationToken = default);
+    Task DeleteRevisionAsync(ProjectModel project, AssetWorkspace workspace, AssetRevision revision, CancellationToken cancellationToken = default);
+    Task DeletePublishedAsync(ProjectModel project, AssetWorkspace workspace, CancellationToken cancellationToken = default);
+    Task<ProjectOperation?> UndoAsync(ProjectModel project, CancellationToken cancellationToken = default);
+    Task<ProjectHistory> GetHistoryAsync(ProjectModel project, CancellationToken cancellationToken = default);
 }
 
 public interface IAudioPreviewService : IDisposable

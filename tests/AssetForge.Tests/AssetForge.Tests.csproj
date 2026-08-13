@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\AssetForge.Core\AssetForge.Core.csproj" />
     <ProjectReference Include="..\..\src\AssetForge.Infrastructure\AssetForge.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\AssetForge.App\AssetForge.App.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>

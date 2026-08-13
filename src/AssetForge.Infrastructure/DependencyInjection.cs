@@ -14,6 +14,7 @@ public static class DependencyInjection
     {
         services.Configure<LocalAISettings>(configuration.GetSection(LocalAISettings.SectionName));
         services.AddSingleton<IProjectFileService, ProjectFileService>();
+        services.AddSingleton<IAssetWorkspaceService, AssetWorkspaceService>();
         services.AddSingleton<IAudioPreviewService, NAudioPreviewService>();
         services.AddHttpClient<ILocalAIClient, LocalAIClient>((provider, client) =>
         {

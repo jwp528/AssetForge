@@ -10,12 +10,13 @@ AssetForge is a local-first desktop tool for browsing, previewing, generating, a
 - Preview PNG, JPEG, and WebP images.
 - Play, pause, and stop supported audio through a replaceable Windows audio service.
 - Discover LocalAI models by capability without hardcoded model names.
-- Name and generate sound effects or music through `POST /v1/sound-generation`; generated audio is saved directly under the selected project's `sounds` folder.
-- Rename generated results safely without overwriting existing files.
+- Generate named sound-effect or music drafts through `POST /v1/sound-generation`, then iterate with Retry before explicitly applying the chosen revision.
+- Reopen a durable per-asset prompt/activity timeline and compare revisions stored under `.assetforge/revisions`.
+- Apply, rename, recoverably delete, and persistently undo asset operations without silently overwriting project files.
 - Preview generated audio and replace an existing audio asset after creating a timestamped backup.
 - Refresh automatically when project assets change outside AssetForge.
 
-TTS, image generation, multiple variants, generation history, recent-project persistence, installers, and non-Windows validation are planned for later milestones. When image generation is added, generated images will use the selected project's `img` folder.
+TTS, image generation, recent-project persistence, installers, and non-Windows validation are planned for later milestones. When image generation is added, published images will use the selected project's `img` folder.
 
 ## Requirements
 
@@ -53,7 +54,15 @@ dotnet test AssetForge.slnx -c Release
 
 Audio is classified as speech or music when its folder path contains a matching context term; other supported audio is treated as a sound effect. Actual playback support depends on the codecs available through NAudio on Windows.
 
-## Safe replacement
+## Iterative workspace and safe replacement
+
+Each selected asset has a persistent AssetForge workspace. Generate and Retry create private revisions under:
+
+```text
+.assetforge/revisions/<asset-id>/
+```
+
+Only **Apply revision** publishes the chosen draft into the project's `sounds` folder or replaces an existing project asset. Delete moves assets into `.assetforge/trash`, while project operation history supports Undo after restarting AssetForge.
 
 AssetForge only replaces a selected project asset after validating its general media type. Before replacement it copies the original to:
 
